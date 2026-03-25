@@ -7,7 +7,7 @@ ox upgrade ← アップグレード
 
 # ソフト保存ディレクトリ
 ユーザー環境限定で、unixは~/.ox、windowsはC:\Users\<ユーザーネーム>\.oxでパッケージを保存できるようにしたいです
-パッケージの参照は、レポジトリ内のpackages/から参照するようにしたいです。
+パッケージの参照は、リモートレポジトリ内(現時点ではhttps://github.com/nazozokc/ox/tree/main/packages)packages/から参照するようにしたいです。
 
 # 使うツール
 pnpm

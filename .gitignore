@@ -3,3 +3,6 @@ dist/
 .ox/
 *.log
 .DS_Store
+*.tsbuildinfo
+.env
+coverage/

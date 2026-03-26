@@ -1,9 +1,6 @@
 import { Command } from 'commander';
 import { listInstalledPackages, installPackage } from '../utils/packages.js';
 import { updateRegistry, getTags, checkoutTag } from '../utils/registry.js';
-import { getRegistryDir } from '../utils/config.js';
-import fs from 'fs/promises';
-import path from 'path';
 
 function compareVersions(a: string, b: string): number {
   const parseVersion = (v: string) => {
@@ -38,7 +35,7 @@ export const upgrade = new Command()
         return;
       }
 
-      const sortedTags = tags.sort(compareVersions);
+      const sortedTags = [...tags].sort(compareVersions);
       const latestTag = sortedTags.pop()!;
       console.log(`Checking out tag: ${latestTag}`);
       await checkoutTag(latestTag);
@@ -53,7 +50,7 @@ export const upgrade = new Command()
       let hasErrors = false;
       for (const pkg of packages) {
         try {
-          await installPackage(pkg.name);
+          await installPackage(pkg.name, true);
         } catch (error) {
           console.error(`Failed to upgrade ${pkg.name}: ${error}`);
           hasErrors = true;

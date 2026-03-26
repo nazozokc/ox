@@ -103,7 +103,7 @@ async function validateNoSymlinks(dirPath: string): Promise<boolean> {
   return true;
 }
 
-export async function installPackage(name: string): Promise<void> {
+export async function installPackage(name: string, force = false): Promise<void> {
   if (!validatePackageName(name)) {
     throw new Error(`Invalid package name '${name}'. Use only letters, numbers, and hyphens.`);
   }
@@ -126,10 +126,13 @@ export async function installPackage(name: string): Promise<void> {
 
   try {
     await fs.access(destDir);
-    console.log(`Package '${name}' is already installed`);
-    return;
+    if (!force) {
+      console.log(`Package '${name}' is already installed`);
+      return;
+    }
+    await fs.rm(destDir, { recursive: true, force: true });
   } catch {
-    // Not installed yet, proceed
+    // destDir が存在しない場合は何もしない（通常のインストールフロー）
   }
 
   try {

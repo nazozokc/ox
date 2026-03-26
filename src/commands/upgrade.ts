@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import { listInstalledPackages, installPackage } from '../utils/packages.js';
 import { updateRegistry, getTags, checkoutTag } from '../utils/registry.js';
 
-const VERSION_TAG_REGEX = /^v?\d+\.\d+\.\d+/;
+const VERSION_TAG_REGEX = /^v?\d+\.\d+\.\d+$/;
 
 function compareVersions(a: string, b: string): number {
   const parseVersion = (v: string) => {

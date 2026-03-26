@@ -1,4 +1,4 @@
-#!/usr/bin/env -S pnpm tsx
+#!/usr/bin/env node
 
 import { Command } from 'commander';
 import { install } from './commands/install.js';

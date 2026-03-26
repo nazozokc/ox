@@ -37,8 +37,15 @@ export async function initRegistry(): Promise<void> {
 
 export async function updateRegistry(): Promise<void> {
   const registryDir = getRegistryDir();
-  const git: SimpleGit = simpleGit(registryDir);
 
+  try {
+    await import('fs/promises').then(fs => fs.access(registryDir));
+  } catch {
+    await initRegistry();
+    return;
+  }
+
+  const git: SimpleGit = simpleGit(registryDir);
   try {
     const isRepo = await git.checkIsRepo();
     if (!isRepo) {

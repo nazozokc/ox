@@ -72,29 +72,24 @@ export async function getAvailablePackages(): Promise<string[]> {
   return packages;
 }
 
-async function isSymbolicLink(dirPath: string): Promise<boolean> {
-  try {
-    const stats = await fs.lstat(dirPath);
-    return stats.isSymbolicLink();
-  } catch {
-    return false;
-  }
-}
-
+/**
+ * dirPath 配下にシンボリックリンクが存在する場合、
+ * そのリンク先が dirPath 自身の配下に収まっているかを検証する。
+ * 配下に収まっていないシンボリックリンクが1つでもあれば false を返す。
+ */
 async function validateNoSymlinks(dirPath: string): Promise<boolean> {
-  const packagesBaseDir = getPackagesDir();
-  const resolvedBase = await fs.realpath(packagesBaseDir);
-  
+  const resolvedBase = await fs.realpath(dirPath);
+
   const entries = await fs.readdir(dirPath, { withFileTypes: true });
   for (const entry of entries) {
     const entryPath = path.join(dirPath, entry.name);
     if (entry.isSymbolicLink()) {
       const resolved = await fs.realpath(entryPath);
-      if (!resolved.startsWith(resolvedBase)) {
+      if (!resolved.startsWith(resolvedBase + path.sep)) {
         return false;
       }
     }
-    if (entry.isDirectory()) {
+    if (entry.isDirectory() && !entry.isSymbolicLink()) {
       if (!(await validateNoSymlinks(entryPath))) {
         return false;
       }
@@ -124,15 +119,14 @@ export async function installPackage(name: string, force = false): Promise<void>
 
   await ensureOxDirs();
 
-  try {
-    await fs.access(destDir);
+  const destExists = await fs.access(destDir).then(() => true).catch(() => false);
+
+  if (destExists) {
     if (!force) {
       console.log(`Package '${name}' is already installed`);
       return;
     }
     await fs.rm(destDir, { recursive: true, force: true });
-  } catch {
-    // destDir が存在しない場合は何もしない（通常のインストールフロー）
   }
 
   try {

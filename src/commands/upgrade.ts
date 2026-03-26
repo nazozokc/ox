@@ -2,6 +2,8 @@ import { Command } from 'commander';
 import { listInstalledPackages, installPackage } from '../utils/packages.js';
 import { updateRegistry, getTags, checkoutTag } from '../utils/registry.js';
 
+const VERSION_TAG_REGEX = /^v?\d+\.\d+\.\d+$/;
+
 function compareVersions(a: string, b: string): number {
   const parseVersion = (v: string) => {
     const cleaned = v.replace(/^v/, '').replace(/[^\d.]/g, '');
@@ -29,22 +31,28 @@ export const upgrade = new Command()
     try {
       await updateRegistry();
 
+      const packages = await listInstalledPackages();
+      if (packages.length === 0) {
+        console.log('No packages installed');
+        return;
+      }
+
       const tags = await getTags();
       if (tags.length === 0) {
         console.log('No tags found in registry');
         return;
       }
 
-      const sortedTags = [...tags].sort(compareVersions);
+      const validTags = tags.filter(tag => VERSION_TAG_REGEX.test(tag));
+      if (validTags.length === 0) {
+        console.log('No valid version tags found in registry');
+        return;
+      }
+
+      const sortedTags = [...validTags].sort(compareVersions);
       const latestTag = sortedTags.pop()!;
       console.log(`Checking out tag: ${latestTag}`);
       await checkoutTag(latestTag);
-
-      const packages = await listInstalledPackages();
-      if (packages.length === 0) {
-        console.log('No packages installed');
-        return;
-      }
 
       console.log(`Upgrading ${packages.length} package(s)...`);
       let hasErrors = false;

@@ -1,5 +1,10 @@
 import { simpleGit, SimpleGit } from 'simple-git';
+import fs from 'fs/promises';
 import { getRegistryDir, loadConfig, ensureOxDirs } from './config.js';
+
+function getGit(workingDir?: string): SimpleGit {
+  return simpleGit(workingDir);
+}
 
 export async function initRegistry(): Promise<void> {
   const registryDir = getRegistryDir();
@@ -9,7 +14,7 @@ export async function initRegistry(): Promise<void> {
 
   let isRepo = false;
   try {
-    const git: SimpleGit = simpleGit(registryDir);
+    const git = getGit(registryDir);
     isRepo = await git.checkIsRepo();
   } catch {
     isRepo = false;
@@ -17,20 +22,19 @@ export async function initRegistry(): Promise<void> {
 
   if (isRepo) {
     console.log('Updating registry...');
-    const git: SimpleGit = simpleGit(registryDir);
+    const git = getGit(registryDir);
     await git.pull();
   } else {
     console.log('Cloning registry...');
     const repoUrl = config.registry.endsWith('.git') 
       ? config.registry 
       : `${config.registry}.git`;
-    const fs = await import('fs/promises');
     try {
       await fs.rm(registryDir, { recursive: true, force: true });
     } catch {
-      // 存在しない場合は無視
+      // Directory does not exist, ignore
     }
-    const git: SimpleGit = simpleGit();
+    const git = getGit();
     await git.clone(repoUrl, registryDir);
   }
 }
@@ -39,13 +43,13 @@ export async function updateRegistry(): Promise<void> {
   const registryDir = getRegistryDir();
 
   try {
-    await import('fs/promises').then(fs => fs.access(registryDir));
+    await fs.access(registryDir);
   } catch {
     await initRegistry();
     return;
   }
 
-  const git: SimpleGit = simpleGit(registryDir);
+  const git = getGit(registryDir);
   try {
     const isRepo = await git.checkIsRepo();
     if (!isRepo) {
@@ -61,7 +65,7 @@ export async function updateRegistry(): Promise<void> {
 
 export async function getTags(): Promise<string[]> {
   const registryDir = getRegistryDir();
-  const git: SimpleGit = simpleGit(registryDir);
+  const git = getGit(registryDir);
 
   try {
     const tags = await git.tags();
@@ -83,7 +87,7 @@ export async function checkoutTag(tag: string): Promise<void> {
   }
   
   const registryDir = getRegistryDir();
-  const git: SimpleGit = simpleGit(registryDir);
+  const git = getGit(registryDir);
 
   try {
     await git.checkout(tag);

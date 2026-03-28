@@ -72,11 +72,6 @@ export async function getAvailablePackages(): Promise<string[]> {
   return packages;
 }
 
-/**
- * dirPath 配下にシンボリックリンクが存在する場合、
- * そのリンク先が dirPath 自身の配下に収まっているかを検証する。
- * 配下に収まっていないシンボリックリンクが1つでもあれば false を返す。
- */
 async function validateNoSymlinks(dirPath: string): Promise<boolean> {
   const resolvedBase = await fs.realpath(dirPath);
 
@@ -135,7 +130,9 @@ export async function installPackage(name: string, force = false): Promise<void>
   } catch (error) {
     try {
       await fs.rm(destDir, { recursive: true, force: true });
-    } catch {}
+    } catch (rmError) {
+      console.warn(`Warning: Failed to clean up '${destDir}': ${rmError}`);
+    }
     throw new Error(`Failed to install '${name}': ${error}`);
   }
 }
